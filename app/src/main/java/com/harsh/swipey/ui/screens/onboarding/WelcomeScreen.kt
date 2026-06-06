@@ -1,5 +1,7 @@
 package com.harsh.swipey.ui.screens.onboarding
 
+import androidx.compose.animation.core.EaseInOutSine
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
@@ -87,19 +89,51 @@ fun WelcomeScreen(
 
             // Floating cards zone — clustered around the vertical center.
             Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
+
+                // Independent slow-float animations for each card.
+                val floatTransition = rememberInfiniteTransition(label = "cardFloat")
+
+                // Glass card: floats up then down, 3.5 s cycle.
+                val glassFloat by floatTransition.animateFloat(
+                    initialValue = -10f,
+                    targetValue  = 10f,
+                    animationSpec = infiniteRepeatable(
+                        animation = tween(3500, easing = EaseInOutSine),
+                        repeatMode = RepeatMode.Reverse,
+                    ),
+                    label = "glassFloat",
+                )
+
+                // Lime card: offset phase (starts at the other end) so cards move independently.
+                val limeFloat by floatTransition.animateFloat(
+                    initialValue = 10f,
+                    targetValue  = -10f,
+                    animationSpec = infiniteRepeatable(
+                        animation = tween(4200, easing = EaseInOutSine),
+                        repeatMode = RepeatMode.Reverse,
+                    ),
+                    label = "limeFloat",
+                )
+
                 GlassIdeaCard(
                     modifier = Modifier
                         .align(Alignment.Center)
                         .offset(x = 60.dp, y = (-96).dp)
                         .width(212.dp)
-                        .graphicsLayer { rotationZ = 4f },
+                        .graphicsLayer {
+                            rotationZ    = 4f
+                            translationY = glassFloat
+                        },
                 )
                 LimeIdeaCard(
                     modifier = Modifier
                         .align(Alignment.Center)
                         .offset(x = (-36).dp, y = 84.dp)
                         .width(248.dp)
-                        .graphicsLayer { rotationZ = -6f },
+                        .graphicsLayer {
+                            rotationZ    = -6f
+                            translationY = limeFloat
+                        },
                 )
                 CreateNowBadge(
                     modifier = Modifier
@@ -364,9 +398,22 @@ private fun MiniTag(text: String, bg: Color, fg: Color) {
 
 @Composable
 private fun CreateNowBadge(modifier: Modifier = Modifier) {
+    // Slowly rotate the dashed outer ring — one full revolution every 8 seconds.
+    val spinTransition = rememberInfiniteTransition(label = "badgeSpin")
+    val rotation by spinTransition.animateFloat(
+        initialValue = 0f,
+        targetValue  = 360f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(8000, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart,
+        ),
+        label = "badgeRotation",
+    )
+
     Box(
         modifier = modifier
             .size(90.dp)
+            .graphicsLayer { rotationZ = rotation }
             .drawBehind {
                 drawCircle(
                     color = SwipeyLime.copy(alpha = 0.5f),
@@ -378,9 +425,11 @@ private fun CreateNowBadge(modifier: Modifier = Modifier) {
             },
         contentAlignment = Alignment.Center,
     ) {
+        // Counter-rotate the inner content so the text stays upright while the ring spins.
         Box(
             modifier = Modifier
                 .size(70.dp)
+                .graphicsLayer { rotationZ = -rotation }
                 .clip(CircleShape)
                 .background(SwipeyLime.copy(alpha = 0.10f))
                 .border(BorderStroke(1.dp, SwipeyLime), CircleShape),
