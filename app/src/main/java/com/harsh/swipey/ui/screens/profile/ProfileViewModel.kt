@@ -46,12 +46,26 @@ class ProfileViewModel(app: Application) : AndroidViewModel(app) {
     private fun toState(savedCount: Int, server: UserProfile?): ProfileUiState {
         val nicheId = server?.nicheId ?: prefs.nicheId
         val goalId = server?.goalId ?: prefs.goalId
-        val name = server?.displayName?.takeIf { it.isNotBlank() } ?: "Editor"
+        val name = nicheDisplayName(nicheId)
         return ProfileUiState(
             name = name,
             nicheName = OnboardingData.nicheById(nicheId)?.name,
             goalTitle = OnboardingData.goals.firstOrNull { it.id == goalId }?.title,
             savedCount = savedCount,
         )
+    }
+
+    private fun nicheDisplayName(nicheId: String?): String = when (nicheId) {
+        "tech", "tech_reviews" -> "Techie"
+        "gaming" -> "Gamer"
+        "fashion" -> "Fashionista"
+        "finance" -> "Investor"
+        "fitness" -> "Athlete"
+        "food" -> "Foodie"
+        "travel" -> "Explorer"
+        "beauty" -> "Glam"
+        "music" -> "Artist"
+        "sports" -> "Sportsman"
+        else -> "Creator"
     }
 }

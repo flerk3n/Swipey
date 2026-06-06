@@ -14,7 +14,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.util.Calendar
 
-const val DAILY_TARGET = 5
+const val DAILY_TARGET = 10
 
 /**
  * Dashboard state derived from the shared saved-ideas cache (kept in sync by the repository).

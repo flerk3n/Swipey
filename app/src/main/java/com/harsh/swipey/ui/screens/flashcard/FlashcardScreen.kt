@@ -107,9 +107,11 @@ fun FlashcardScreen(
         onDismiss = viewModel::dismissTop,
         onSave = viewModel::saveTop,
         onLike = {
+            // Capture the top card BEFORE calling likeTop(), which removes it from the queue.
+            val topId = (viewModel.uiState.value as? FlashcardUiState.Content)
+                ?.cards?.firstOrNull()?.id
             viewModel.likeTop()
-            (viewModel.uiState.value as? FlashcardUiState.Content)
-                ?.cards?.firstOrNull()?.id?.let(onLike)
+            topId?.let(onLike)
         },
         onReset = viewModel::reset,
         modifier = modifier,
