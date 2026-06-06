@@ -1,0 +1,19 @@
+# Environment / secrets
+.env
+
+# Local database
+data/
+*.db
+*.db-journal
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.mypy_cache/
+
+# OS
+.DS_Store

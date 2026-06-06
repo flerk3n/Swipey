@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  DEV ONLY. Permits cleartext (HTTP) traffic so the app can reach the local FastAPI
+  backend during development (emulator host 10.0.2.2 and the laptop's LAN IP over Wi-Fi).
+  Production builds should remove this and use HTTPS.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>

@@ -1,0 +1,1 @@
+"""Swipey backend application package."""
