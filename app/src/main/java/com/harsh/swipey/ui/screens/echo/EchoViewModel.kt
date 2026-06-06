@@ -23,6 +23,8 @@ data class EchoUiState(
     val displayedGenerated: String = "",
     val isGenerating: Boolean = false,
     val tags: List<String> = emptyList(),
+    val notionPushed: Boolean = false,
+    val isSendingToNotion: Boolean = false,
 )
 
 /**
@@ -39,6 +41,7 @@ class EchoViewModel(
 ) : ViewModel() {
 
     private val ideaId: String = checkNotNull(savedStateHandle["ideaId"])
+    private val notionRepository = ServiceLocator.notionRepository
 
     private val _uiState = MutableStateFlow(resolveInitialState())
     val uiState: StateFlow<EchoUiState> = _uiState.asStateFlow()
@@ -92,6 +95,17 @@ class EchoViewModel(
     private fun persistTags() {
         val tags = _uiState.value.tags
         viewModelScope.launch { runCatching { repository.updateTags(ideaId, tags) } }
+    }
+
+    /** Push this idea to Notion. */
+    fun onSendToNotion() {
+        if (_uiState.value.isSendingToNotion) return
+        _uiState.update { it.copy(isSendingToNotion = true) }
+        viewModelScope.launch {
+            runCatching { notionRepository.pushIdea(ideaId) }
+                .onSuccess { _uiState.update { it.copy(notionPushed = true) } }
+            _uiState.update { it.copy(isSendingToNotion = false) }
+        }
     }
 
     companion object {

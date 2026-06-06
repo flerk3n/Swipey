@@ -47,4 +47,13 @@ interface SwipeyApi {
 
     @PUT("api/v1/profile/settings")
     suspend fun updateSettings(@Body body: SettingsDto): SettingsDto
+
+    @GET("api/v1/notion/status")
+    suspend fun getNotionStatus(): NotionStatusDto
+
+    @POST("api/v1/ideas/{id}/notion")
+    suspend fun pushToNotion(@Path("id") id: String): NotionPushDto
+
+    @POST("api/v1/saved/notion")
+    suspend fun pushAllToNotion(): List<NotionPushDto>
 }

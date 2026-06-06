@@ -1,9 +1,13 @@
 package com.harsh.swipey.ui.screens.dashboard
 
+import android.app.Application
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.harsh.swipey.data.OnboardingPrefs
+import com.harsh.swipey.data.SavedIdeasStore
 import com.harsh.swipey.data.ServiceLocator
 import com.harsh.swipey.data.model.IdeaModel
 import com.harsh.swipey.data.repository.IdeaRepository
@@ -15,6 +19,21 @@ import kotlinx.coroutines.launch
 import java.util.Calendar
 
 const val DAILY_TARGET = 10
+
+/** Maps an onboarding niche id to a display persona name. Shared by Dashboard + Profile. */
+fun nicheDisplayName(nicheId: String?): String = when (nicheId) {
+    "tech", "tech_reviews" -> "Techie"
+    "gaming" -> "Gamer"
+    "fashion" -> "Fashionista"
+    "finance" -> "Investor"
+    "fitness" -> "Athlete"
+    "food" -> "Foodie"
+    "travel" -> "Explorer"
+    "beauty" -> "Glam"
+    "music" -> "Artist"
+    "sports" -> "Sportsman"
+    else -> "Creator"
+}
 
 /**
  * Dashboard state derived from the shared saved-ideas cache (kept in sync by the repository).
@@ -35,10 +54,12 @@ data class DashboardUiState(
 /** Reads saved ideas (kept in sync by the repository) and exposes derived dashboard state. */
 class DashboardViewModel(
     private val repository: IdeaRepository,
+    app: Application? = null,
 ) : ViewModel() {
 
+    private val prefs: OnboardingPrefs? = app?.let { OnboardingPrefs(it) }
+
     init {
-        // Reconcile the cache with the server whenever the dashboard is shown.
         viewModelScope.launch { runCatching { repository.refreshSaved() } }
     }
 
@@ -52,6 +73,7 @@ class DashboardViewModel(
 
     private fun toState(saved: List<IdeaModel>) = DashboardUiState(
         greeting = greetingForHour(currentHour()),
+        userName = nicheDisplayName(prefs?.nicheId),
         savedIdeas = saved,
         streak = saved.size,
     )
@@ -68,7 +90,10 @@ class DashboardViewModel(
 
     companion object {
         val Factory = viewModelFactory {
-            initializer { DashboardViewModel(ServiceLocator.ideaRepository) }
+            initializer {
+                val app = this[androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY]!!
+                DashboardViewModel(ServiceLocator.ideaRepository, app)
+            }
         }
     }
 }

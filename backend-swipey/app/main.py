@@ -8,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from .config import settings
 from .database import init_db
-from .routers import health, ideas, profile
+from .routers import health, ideas, profile, notion
 
 API_PREFIX = "/api/v1"
 
@@ -31,6 +31,9 @@ app.add_middleware(
 @app.on_event("startup")
 def _startup() -> None:
     init_db()
+    # Add Notion columns to the database schema if configured.
+    from .services.notion import ensure_columns
+    ensure_columns()
 
 
 @app.get("/", tags=["health"])
@@ -46,3 +49,4 @@ def root() -> dict:
 app.include_router(health.router, prefix=API_PREFIX)
 app.include_router(ideas.router, prefix=API_PREFIX)
 app.include_router(profile.router, prefix=API_PREFIX)
+app.include_router(notion.router, prefix=API_PREFIX)

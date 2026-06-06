@@ -87,8 +87,11 @@ fun ExpandedEchoScreen(
         displayedGenerated = state.displayedGenerated,
         isGenerating = state.isGenerating,
         tags = state.tags,
+        notionPushed = state.notionPushed,
+        isSendingToNotion = state.isSendingToNotion,
         onBack = onBack,
         onGenerate = viewModel::onGenerate,
+        onSendToNotion = viewModel::onSendToNotion,
         onTagToggled = viewModel::onTagToggled,
         onTagAdded = viewModel::onTagAdded,
         modifier = modifier,
@@ -106,8 +109,11 @@ fun ExpandedEchoContent(
     displayedGenerated: String,
     isGenerating: Boolean,
     tags: List<String>,
+    notionPushed: Boolean = false,
+    isSendingToNotion: Boolean = false,
     onBack: () -> Unit,
     onGenerate: () -> Unit,
+    onSendToNotion: () -> Unit = {},
     onTagToggled: (String) -> Unit,
     onTagAdded: (String) -> Unit,
     modifier: Modifier = Modifier,
@@ -236,6 +242,16 @@ fun ExpandedEchoContent(
                     text = if (isGenerating) "Generating…" else "Generate Content",
                     onClick = onGenerate,
                     enabled = !isGenerating,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                SecondaryButton(
+                    text = when {
+                        isSendingToNotion -> "Sending to Notion…"
+                        notionPushed -> "Sent to Notion ✓"
+                        else -> "Send to Notion"
+                    },
+                    onClick = onSendToNotion,
+                    enabled = !isSendingToNotion && !notionPushed,
                     modifier = Modifier.fillMaxWidth(),
                 )
                 SecondaryButton(
@@ -413,6 +429,7 @@ private fun EchoIdlePreview() {
                 tags = SampleIdeas.hooks.tags,
                 onBack = {},
                 onGenerate = {},
+                onSendToNotion = {},
                 onTagToggled = {},
                 onTagAdded = {},
             )
@@ -432,6 +449,7 @@ private fun EchoTypewriterPreview() {
                 tags = SampleIdeas.hooks.tags,
                 onBack = {},
                 onGenerate = {},
+                onSendToNotion = {},
                 onTagToggled = {},
                 onTagAdded = {},
             )

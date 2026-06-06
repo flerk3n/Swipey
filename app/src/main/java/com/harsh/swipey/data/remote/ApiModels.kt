@@ -69,3 +69,16 @@ data class ProfileUpdateBody(
     @SerializedName("goal_id") val goalId: String? = null,
     val onboarded: Boolean? = null,
 )
+
+data class NotionStatusDto(
+    val enabled: Boolean,
+    @SerializedName("database_id") val databaseId: String? = null,
+)
+
+data class NotionPushDto(
+    @SerializedName("idea_id") val ideaId: String,
+    @SerializedName("notion_url") val notionUrl: String = "",
+    val title: String = "",
+    val ok: Boolean = true,
+    val error: String? = null,
+)

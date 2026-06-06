@@ -3,6 +3,7 @@ package com.harsh.swipey.ui.screens.settings
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -26,6 +27,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -64,16 +66,40 @@ fun SettingsScreen(
     viewModel: SettingsViewModel = viewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    SettingsContent(
-        state = state,
-        onBack = onBack,
-        onPush = viewModel::setPushNotifications,
-        onReminder = viewModel::setDailyReminder,
-        onReducedMotion = viewModel::setReducedMotion,
-        onNotion = viewModel::setNotionConnected,
-        onCalendar = viewModel::setCalendarConnected,
-        modifier = modifier,
-    )
+    val isExporting by viewModel.isExporting.collectAsStateWithLifecycle()
+
+    var toastVisible by remember { mutableStateOf(false) }
+    var toastMessage by remember { mutableStateOf("") }
+
+    LaunchedEffect(Unit) {
+        viewModel.toastMessages.collect { msg ->
+            toastMessage = msg
+            toastVisible = true
+            kotlinx.coroutines.delay(3000)
+            toastVisible = false
+        }
+    }
+
+    Box(modifier = modifier.fillMaxSize()) {
+        SettingsContent(
+            state = state,
+            onBack = onBack,
+            onPush = viewModel::setPushNotifications,
+            onReminder = viewModel::setDailyReminder,
+            onReducedMotion = viewModel::setReducedMotion,
+            onNotion = viewModel::setNotionConnected,
+            onCalendar = viewModel::setCalendarConnected,
+            onExportToNotion = viewModel::exportAllToNotion,
+            isExporting = isExporting,
+        )
+        com.harsh.swipey.ui.components.SaveToast(
+            visible = toastVisible,
+            message = toastMessage,
+            modifier = androidx.compose.ui.Modifier
+                .align(androidx.compose.ui.Alignment.BottomCenter)
+                .padding(bottom = 96.dp),
+        )
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -90,6 +116,8 @@ fun SettingsContent(
     onReducedMotion: (Boolean) -> Unit,
     onNotion: (Boolean) -> Unit,
     onCalendar: (Boolean) -> Unit,
+    onExportToNotion: () -> Unit = {},
+    isExporting: Boolean = false,
     modifier: Modifier = Modifier,
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -182,6 +210,13 @@ fun SettingsContent(
                 containerColor = SwipeyCardSurface,
             ) {
                 NotionSheet(
+                    isExporting = isExporting,
+                    onExport = {
+                        scope.launch { sheetState.hide() }.invokeOnCompletion {
+                            showNotionSheet = false
+                        }
+                        onExportToNotion()
+                    },
                     onClose = {
                         scope.launch { sheetState.hide() }.invokeOnCompletion {
                             showNotionSheet = false
@@ -304,7 +339,11 @@ private fun StaticRow(title: String, value: String) {
 }
 
 @Composable
-private fun NotionSheet(onClose: () -> Unit) {
+private fun NotionSheet(
+    isExporting: Boolean,
+    onExport: () -> Unit,
+    onClose: () -> Unit,
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -313,18 +352,24 @@ private fun NotionSheet(onClose: () -> Unit) {
         verticalArrangement = Arrangement.spacedBy(Spacing.md),
     ) {
         Text(
-            text = "Connect Notion",
+            text = "Notion",
             style = MaterialTheme.typography.titleMedium,
             color = SwipeyOnSurface,
         )
         Text(
-            text = "Sync your saved ideas straight into a Notion database. Full OAuth " +
-                "connection arrives with the backend — for now this is a placeholder.",
+            text = "Push all your saved ideas to your Notion database — title, niche, " +
+                "category, tags, and generated content included.",
             style = MaterialTheme.typography.bodyLarge,
             color = SwipeyOnSurfaceMuted,
         )
         PrimaryButton(
-            text = "Got it",
+            text = if (isExporting) "Exporting…" else "Export all to Notion",
+            onClick = onExport,
+            enabled = !isExporting,
+            modifier = Modifier.fillMaxWidth(),
+        )
+        com.harsh.swipey.ui.components.SecondaryButton(
+            text = "Cancel",
             onClick = onClose,
             modifier = Modifier.fillMaxWidth(),
         )

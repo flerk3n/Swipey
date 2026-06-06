@@ -71,18 +71,21 @@ echo "  $HEALTH"
 # ── 4. Build + install the Android app ───────────────────────────────────────
 cd "$PROJECT_ROOT"
 
-# Check emulator is connected.
-if ! "$ADB" devices | grep -q "emulator"; then
-    warn "No emulator detected — skipping installDebug."
-    warn "Start Pixel_9 with:  ~/Library/Android/sdk/emulator/emulator -avd Pixel_9"
+# Find the first connected physical device (non-emulator).
+DEVICE_SERIAL=$("$ADB" devices | grep -v "emulator" | grep "device$" | awk '{print $1}' | head -1)
+
+if [ -z "$DEVICE_SERIAL" ]; then
+    warn "No physical device detected — skipping installDebug."
+    warn "Connect your phone via USB with USB debugging enabled."
 else
-    info "Building and installing debug APK on emulator…"
-    ./gradlew installDebug --quiet
+    info "Physical device found: $DEVICE_SERIAL"
+    info "Building and installing debug APK on $DEVICE_SERIAL..."
+    ANDROID_SERIAL="$DEVICE_SERIAL" ./gradlew installDebug --quiet
     echo "  Installed."
 
     # Clear app data so onboarding runs fresh.
-    info "Clearing app data on emulator (fresh onboarding)…"
-    "$ADB" shell pm clear com.harsh.swipey > /dev/null && echo "  App data cleared."
+    info "Clearing app data on $DEVICE_SERIAL (fresh onboarding)..."
+    "$ADB" -s "$DEVICE_SERIAL" shell pm clear com.harsh.swipey > /dev/null && echo "  App data cleared."
 fi
 
 # ── 5. Summary ────────────────────────────────────────────────────────────────
@@ -95,6 +98,6 @@ echo "  Swagger  : http://localhost:8000/docs"
 LAN=$(ipconfig getifaddr en0 2>/dev/null || true)
 [ -n "$LAN" ] && echo "  LAN (phone): http://$LAN:8000/api/v1/health"
 echo ""
-echo "  Emulator : open Swipey, pick a niche, swipe away."
+echo "  Device   : open Swipey on your phone, pick a niche, swipe away."
 echo "  Logs     : tail -f /tmp/swipey_backend.log"
 echo ""

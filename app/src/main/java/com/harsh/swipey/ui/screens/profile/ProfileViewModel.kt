@@ -8,6 +8,7 @@ import com.harsh.swipey.data.SavedIdeasStore
 import com.harsh.swipey.data.ServiceLocator
 import com.harsh.swipey.data.model.OnboardingData
 import com.harsh.swipey.data.repository.UserProfile
+import com.harsh.swipey.ui.screens.dashboard.nicheDisplayName
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -46,26 +47,11 @@ class ProfileViewModel(app: Application) : AndroidViewModel(app) {
     private fun toState(savedCount: Int, server: UserProfile?): ProfileUiState {
         val nicheId = server?.nicheId ?: prefs.nicheId
         val goalId = server?.goalId ?: prefs.goalId
-        val name = nicheDisplayName(nicheId)
         return ProfileUiState(
-            name = name,
+            name = nicheDisplayName(nicheId),
             nicheName = OnboardingData.nicheById(nicheId)?.name,
             goalTitle = OnboardingData.goals.firstOrNull { it.id == goalId }?.title,
             savedCount = savedCount,
         )
-    }
-
-    private fun nicheDisplayName(nicheId: String?): String = when (nicheId) {
-        "tech", "tech_reviews" -> "Techie"
-        "gaming" -> "Gamer"
-        "fashion" -> "Fashionista"
-        "finance" -> "Investor"
-        "fitness" -> "Athlete"
-        "food" -> "Foodie"
-        "travel" -> "Explorer"
-        "beauty" -> "Glam"
-        "music" -> "Artist"
-        "sports" -> "Sportsman"
-        else -> "Creator"
     }
 }

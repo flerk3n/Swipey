@@ -3,8 +3,10 @@ package com.harsh.swipey.data
 import com.harsh.swipey.BuildConfig
 import com.harsh.swipey.data.remote.SwipeyApi
 import com.harsh.swipey.data.repository.IdeaRepository
+import com.harsh.swipey.data.repository.NotionRepository
 import com.harsh.swipey.data.repository.ProfileRepository
 import com.harsh.swipey.data.repository.RemoteIdeaRepository
+import com.harsh.swipey.data.repository.RemoteNotionRepository
 import com.harsh.swipey.data.repository.RemoteProfileRepository
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -52,6 +54,6 @@ object ServiceLocator {
     }
 
     val ideaRepository: IdeaRepository by lazy { RemoteIdeaRepository(api) }
-
     val profileRepository: ProfileRepository by lazy { RemoteProfileRepository(api) }
+    val notionRepository: NotionRepository by lazy { RemoteNotionRepository(api) }
 }

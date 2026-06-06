@@ -37,10 +37,16 @@ class Settings:
         self.default_user_id: str = os.getenv("DEFAULT_USER_ID", "demo").strip() or "demo"
         self.dedup_threshold: float = _as_float(os.getenv("DEDUP_THRESHOLD"), 0.6)
 
+        self.notion_token: str = os.getenv("NOTION_TOKEN", "").strip()
+        self.notion_database_id: str = os.getenv("NOTION_DATABASE_ID", "").strip()
+
     @property
     def gemini_enabled(self) -> bool:
-        """True when a Gemini key is configured (generation endpoints active)."""
         return bool(self.gemini_api_key)
+
+    @property
+    def notion_enabled(self) -> bool:
+        return bool(self.notion_token) and bool(self.notion_database_id)
 
 
 settings = Settings()

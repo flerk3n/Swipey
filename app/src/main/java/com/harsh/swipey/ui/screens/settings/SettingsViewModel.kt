@@ -6,8 +6,11 @@ import androidx.lifecycle.viewModelScope
 import com.harsh.swipey.data.ServiceLocator
 import com.harsh.swipey.data.SettingsPrefs
 import com.harsh.swipey.data.repository.UserSettings
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -29,9 +32,16 @@ class SettingsViewModel(app: Application) : AndroidViewModel(app) {
 
     private val prefs = SettingsPrefs(app)
     private val profileRepository = ServiceLocator.profileRepository
+    private val notionRepository = ServiceLocator.notionRepository
 
     private val _uiState = MutableStateFlow(prefs.toUiState())
     val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
+
+    private val _toastMessages = MutableSharedFlow<String>(extraBufferCapacity = 1)
+    val toastMessages: SharedFlow<String> = _toastMessages.asSharedFlow()
+
+    private val _isExporting = MutableStateFlow(false)
+    val isExporting: StateFlow<Boolean> = _isExporting.asStateFlow()
 
     init {
         // Hydrate from the server, falling back silently to the local cache if offline.
@@ -73,6 +83,29 @@ class SettingsViewModel(app: Application) : AndroidViewModel(app) {
         prefs.reducedMotion = state.reducedMotion
         prefs.notionConnected = state.notionConnected
         prefs.calendarConnected = state.calendarConnected
+    }
+
+    /** Push all saved ideas to Notion. Shows a toast with the result. */
+    fun exportAllToNotion() {
+        if (_isExporting.value) return
+        viewModelScope.launch {
+            _isExporting.value = true
+            try {
+                val results = notionRepository.pushAll()
+                val ok = results.count { it.ok }
+                val fail = results.size - ok
+                val msg = when {
+                    results.isEmpty() -> "No saved ideas to export."
+                    fail == 0 -> "Exported $ok idea${if (ok == 1) "" else "s"} to Notion ✓"
+                    else -> "Exported $ok, failed $fail. Check Notion."
+                }
+                _toastMessages.tryEmit(msg)
+            } catch (e: Exception) {
+                _toastMessages.tryEmit("Notion export failed: ${e.message}")
+            } finally {
+                _isExporting.value = false
+            }
+        }
     }
 }
 
