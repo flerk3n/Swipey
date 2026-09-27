@@ -15,7 +15,7 @@
 
 ## What is Swipey?
 
-Swipey is a Tinder-style content-idea app for creators. You swipe through a deck of AI-generated idea cards scoped to your niche — **Tech Reviews**, **Gaming**, or **Fashion** — like the ones you want, generate full scripts with Gemini, and push them straight to Notion.
+Swipey is a Tinder-style content-idea app for creators. You swipe through a deck of AI-generated idea cards scoped to your niche — **Tech Reviews**, **Gaming**, or **Fashion** — like the ones you want, generate full scripts with Gemini, and push them straight to Notion. (Developed under 3hrs for a hackathon)
 
 The interaction model is the product: every screen is designed around the swipe loop.
 
